@@ -96,7 +96,6 @@ public final class Contract {
     }
 
     /**
-     *
      * @return contractor ID
      */
     public int getContractorID() {
@@ -104,7 +103,6 @@ public final class Contract {
     }
 
     /**
-     *
      * @return contractee ID
      */
     public int getContracteeID() {
@@ -112,7 +110,6 @@ public final class Contract {
     }
 
     /**
-     *
      * @return remaining months of the contract
      */
     public int getRemainedMonths() {

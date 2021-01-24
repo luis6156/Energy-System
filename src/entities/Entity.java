@@ -6,7 +6,7 @@ public abstract class Entity {
     /**
      * Constructor for entity
      *
-     * @param id     entity's id
+     * @param id entity's id
      */
     protected Entity(final int id) {
         this.id = id;

@@ -88,12 +88,13 @@ public final class Distributor extends SpecialEntity implements Observer {
      */
     public void updateProductionCost() {
         double cost = 0;
+        final int nominator = 10;
 
         for (Producer producer : producers) {
             cost += (producer.getEnergyPerDistributor() * producer.getPrice());
         }
 
-        productionCost = (int) Math.round(Math.floor(cost / 10));
+        productionCost = (int) Math.round(Math.floor(cost / nominator));
     }
 
     /**

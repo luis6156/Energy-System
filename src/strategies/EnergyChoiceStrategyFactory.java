@@ -30,7 +30,7 @@ public final class EnergyChoiceStrategyFactory {
     /**
      * Generic Factory Method for strategies
      *
-     * @param type   type of object to be created
+     * @param type      type of object to be created
      * @param producers list of producers used for sorting
      * @return new strategy type
      */

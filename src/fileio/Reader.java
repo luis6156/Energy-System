@@ -1,6 +1,10 @@
 package fileio;
 
-import entities.*;
+import entities.Consumer;
+import entities.Distributor;
+import entities.EntityFactory;
+import entities.Producer;
+import entities.EntityType;
 import game.Game;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
