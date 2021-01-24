@@ -2,5 +2,6 @@ package entities;
 
 public enum EntityType {
     CONSUMER,
-    DISTRIBUTOR
+    DISTRIBUTOR,
+    PRODUCER
 }

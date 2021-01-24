@@ -3,6 +3,7 @@ package fileio;
 import entities.Consumer;
 import entities.Contract;
 import entities.Distributor;
+import entities.Producer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -31,10 +32,12 @@ public final class Writer {
      * @return JSONObject that contains all the data that needs to be written
      */
     public JSONObject writeFile(final List<Consumer> consumers,
-                                final List<Distributor> distributors) {
+                                final List<Distributor> distributors,
+                                final List<Producer> producers) {
         JSONObject result = new JSONObject();
         JSONArray consumersArray = new JSONArray();
         JSONArray distributorsArray = new JSONArray();
+        JSONArray producerArray = new JSONArray();
 
         for (Consumer consumer : consumers) {
             JSONObject consumerData = new JSONObject();
@@ -47,10 +50,13 @@ public final class Writer {
         for (Distributor distributor : distributors) {
             JSONObject distributorData = new JSONObject();
             distributorData.put(Constants.ID, distributor.getID());
+            distributorData.put(Constants.ENERGY_NEEDED, distributor.getEnergyNeeded());
+            distributorData.put(Constants.CONTRACT_COST, distributor.getContractCost());
             distributorData.put(Constants.BUDGET, distributor.getBudget());
+            distributorData.put(Constants.PRODUCER_STRATEGY, distributor.getStrategy().toString());
             distributorData.put(Constants.IS_BANKRUPT, distributor.isBankrupt());
             JSONArray contractsArray = new JSONArray();
-            for (Contract contract : distributor.getContracts()) {
+            for (Contract contract : distributor.getConsumerContracts()) {
                 JSONObject contractData = new JSONObject();
                 contractData.put(Constants.CONSUMER_ID, contract.getContracteeID());
                 contractData.put(Constants.PRICE, contract.getOriginalPrice());
@@ -61,8 +67,28 @@ public final class Writer {
             distributorsArray.add(distributorData);
         }
 
+        for (Producer producer : producers) {
+            JSONObject producerData = new JSONObject();
+            producerData.put(Constants.ID, producer.getID());
+            producerData.put(Constants.MAX_DISTRIBUTORS, producer.getMaxDistributors());
+            producerData.put(Constants.PRICE_KW, producer.getPrice());
+            producerData.put(Constants.ENERGY_TYPE, producer.getEnergyType().toString());
+            producerData.put(Constants.ENERGY_PER_DISTRIBUTOR, producer.getEnergyPerDistributor());
+            JSONArray distributorsHistory = new JSONArray();
+            for (int i = 1; i < producer.getDistributors().size(); ++i) {
+                JSONObject distributorsHistoryData = new JSONObject();
+                distributorsHistoryData.put(Constants.MONTH, i);
+                distributorsHistoryData.put(Constants.DISTRIBUTORS_IDS,
+                        producer.getDistributors().get(i));
+                distributorsHistory.add(distributorsHistoryData);
+            }
+            producerData.put(Constants.MONTHLY_STATS, distributorsHistory);
+            producerArray.add(producerData);
+        }
+
         result.put(Constants.CONSUMERS, consumersArray);
         result.put(Constants.DISTRIBUTORS, distributorsArray);
+        result.put(Constants.PRODUCERS, producerArray);
 
         return result;
     }

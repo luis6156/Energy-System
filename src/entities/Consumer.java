@@ -1,6 +1,6 @@
 package entities;
 
-public final class Consumer extends Entity {
+public final class Consumer extends SpecialEntity {
     private final int monthlyIncome;
     private Contract contract = null;
 

@@ -45,7 +45,16 @@ public final class EntityFactory {
                     ((Long) object.get("contractLength")).intValue(),
                     ((Long) object.get("initialBudget")).intValue(),
                     ((Long) object.get("initialInfrastructureCost")).intValue(),
-                    ((Long) object.get("initialProductionCost")).intValue()
+                    ((Long) object.get("energyNeededKW")).intValue(),
+                    object.get("producerStrategy").toString()
+            );
+        } else if (type == EntityType.PRODUCER) {
+            return new Producer(
+                    ((Long) object.get("id")).intValue(),
+                    object.get("energyType").toString(),
+                    ((Long) object.get("maxDistributors")).intValue(),
+                    ((Double) object.get("priceKW")),
+                    ((Long) object.get("energyPerDistributor")).intValue()
             );
         }
         throw new IllegalArgumentException("Unrecognized object type.");

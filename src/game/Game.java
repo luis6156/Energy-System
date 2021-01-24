@@ -2,7 +2,7 @@ package game;
 
 import entities.Consumer;
 import entities.Distributor;
-import entities.EntityFactory;
+import entities.Producer;
 import fileio.Writer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 public final class Game {
     private final List<Consumer> consumers;
     private final List<Distributor> distributors;
+    private final List<Producer> producers;
     private final List<Consumer> bankruptConsumers = new ArrayList<>();
     private final List<Distributor> bankruptDistributors = new ArrayList<>();
     private final int numberOfTurns;
@@ -32,21 +33,27 @@ public final class Game {
      * @param distributors   the initial distributors for the game
      */
     public Game(final int numberOfTurns, final JSONArray monthlyUpdates,
-                final List<Consumer> consumers, final List<Distributor> distributors) {
+                final List<Consumer> consumers, final List<Distributor> distributors,
+                final List<Producer> producers) {
         this.numberOfTurns = numberOfTurns;
         this.monthlyUpdates = monthlyUpdates;
         this.consumers = consumers;
         this.distributors = distributors;
+        this.producers = producers;
     }
 
     /**
      * Starts game by doing all tasks necessary each month
      */
     public void startGame() {
-        GameRules gameRules = new GameRules(consumers, distributors,
+        GameRules gameRules = new GameRules(consumers, distributors, producers,
                 bankruptConsumers, bankruptDistributors);
 
+        gameRules.createObservers();
+        gameRules.createProducersHistory(numberOfTurns + 1);
+
         // Round 0
+        gameRules.assignProducers(0);
         gameRules.createContracts();
         gameRules.signContracts();
         gameRules.updatePlayersBudgets();
@@ -54,15 +61,20 @@ public final class Game {
         // Updates game state each month
         for (int i = 0; i < numberOfTurns; ++i) {
             JSONObject object = (JSONObject) monthlyUpdates.get(i);
-            JSONArray costsChanges = (JSONArray) object.get("costsChanges");
+            JSONArray distributorChanges = (JSONArray) object.get("distributorChanges");
             JSONArray newConsumers = (JSONArray) object.get("newConsumers");
-            gameRules.processChanges(EntityFactory.getInstance(), costsChanges, newConsumers);
+            JSONArray producersChanges = (JSONArray) object.get("producerChanges");
+            gameRules.updateDistributors(distributorChanges);
+            gameRules.updateConsumers(newConsumers);
             gameRules.createContracts();
             gameRules.purgePaidContracts();
             gameRules.signContracts();
             gameRules.updatePlayersBudgets();
             gameRules.purgeCanceledContracts();
             gameRules.purgeBrokePlayers();
+            gameRules.updateProducers(producersChanges);
+            gameRules.prepareProducers(i + 1);
+            gameRules.assignProducers(i + 1);
         }
     }
 
@@ -84,6 +96,8 @@ public final class Game {
                 .flatMap(Collection::stream).sorted(Comparator.comparingInt(Distributor::getID))
                 .collect(Collectors.toList());
 
-        return writer.writeFile(totalConsumers, totalDistributors);
+        producers.sort(Comparator.comparingInt(Producer::getID));
+
+        return writer.writeFile(totalConsumers, totalDistributors, producers);
     }
 }

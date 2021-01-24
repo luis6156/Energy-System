@@ -1,31 +1,33 @@
 package entities;
 
+import observer.Observable;
+import observer.Observer;
+import strategies.EnergyChoiceStrategyType;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public final class Distributor extends Entity {
-    private final int contractLength;
-    private final List<Contract> contracts = new ArrayList<>();
-    private int infrastructureCost;
-    private int productionCost;
-    private int contractCost = 0;
 
-    /**
-     * Constructor for distributor
-     *
-     * @param id                 distributor's ID
-     * @param contractLength     distributor's contract length
-     * @param budget             distributor's initial budget
-     * @param infrastructureCost distributor's infrastructure cost
-     * @param productionCost     distributor's production cost
-     */
+public final class Distributor extends SpecialEntity implements Observer {
+    private final int contractLength;
+    private final List<Contract> consumerContracts = new ArrayList<>();
+    private final List<Producer> producers = new ArrayList<>();
+    private final int energyNeeded;
+    private int infrastructureCost;
+    private int contractCost = 0;
+    private int productionCost;
+    private final EnergyChoiceStrategyType strategy;
+    private boolean isAnyProducerAltered = true;
+
     public Distributor(final int id, final int contractLength, final int budget,
-                       final int infrastructureCost, final int productionCost) {
+                       final int infrastructureCost, final int energyNeeded,
+                       final String strategy) {
         super(id, budget);
         this.contractLength = contractLength;
         this.infrastructureCost = infrastructureCost;
-        this.productionCost = productionCost;
+        this.energyNeeded = energyNeeded;
+        this.strategy = EnergyChoiceStrategyType.valueOf(strategy);
     }
 
     /**
@@ -33,7 +35,7 @@ public final class Distributor extends Entity {
      */
     @Override
     public void purgePaidContract() {
-        contracts.removeIf(Contract::isPaid);
+        consumerContracts.removeIf(Contract::isPaid);
     }
 
     /**
@@ -41,7 +43,7 @@ public final class Distributor extends Entity {
      */
     @Override
     public void purgeCanceledContract() {
-        contracts.removeIf(Contract::isCanceled);
+        consumerContracts.removeIf(Contract::isCanceled);
     }
 
     /**
@@ -49,7 +51,7 @@ public final class Distributor extends Entity {
      */
     @Override
     public void advanceBudget() {
-        budget -= (infrastructureCost + productionCost * contracts.size());
+        budget -= (infrastructureCost + productionCost * consumerContracts.size());
     }
 
     /**
@@ -58,7 +60,7 @@ public final class Distributor extends Entity {
     @Override
     public void advanceLease() {
         // Add all contracts' prices to the budget if they were paid this month
-        for (Contract contract : contracts) {
+        for (Contract contract : consumerContracts) {
             if (!contract.hasPenalty()) {
                 budget += contract.getCurrentPrice();
             }
@@ -67,19 +69,27 @@ public final class Distributor extends Entity {
         // Checks if the budget is positive, otherwise file for bankruptcy
         isBankrupt = budget < 0;
         if (isBankrupt) {
-            contracts.forEach(Contract::terminateContract);
+            consumerContracts.forEach(Contract::terminateContract);
         }
     }
 
+    public void updateProductionCost() {
+        double cost = 0;
+
+        for (Producer producer : producers) {
+            cost += (producer.getEnergyPerDistributor() * producer.getPrice());
+        }
+
+        productionCost = (int) Math.round(Math.floor(cost / 10));
+    }
+
     /**
-     * Updates the current costs with new ones
+     * Updates the current infrastructure cost
      *
      * @param newInfrastructureCost new infrastructure cost
-     * @param newProductionCost     new production cost
      */
-    public void updateCosts(final int newInfrastructureCost, final int newProductionCost) {
+    public void updateCosts(final int newInfrastructureCost) {
         infrastructureCost = newInfrastructureCost;
-        productionCost = newProductionCost;
     }
 
     /**
@@ -90,14 +100,22 @@ public final class Distributor extends Entity {
         int profit = (int) Math.round(Math.floor(profitMargin * productionCost));
 
         // Check if this month there are no clients associated with the distributor
-        if (contracts.isEmpty()) {
+        if (consumerContracts.isEmpty()) {
             contractCost = infrastructureCost + productionCost + profit;
             return;
         }
 
         contractCost =
-                (int) Math.round(Math.floor(infrastructureCost / contracts.size())
+                (int) Math.round(Math.floor(infrastructureCost / consumerContracts.size())
                         + productionCost + profit);
+    }
+
+    public int getEnergyNeeded() {
+        return energyNeeded;
+    }
+
+    public EnergyChoiceStrategyType getStrategy() {
+        return strategy;
     }
 
     /**
@@ -105,7 +123,7 @@ public final class Distributor extends Entity {
      */
     @Override
     public void signContract(final Contract contract) {
-        contracts.add(contract);
+        consumerContracts.add(contract);
     }
 
     public int getContractLength() {
@@ -116,7 +134,34 @@ public final class Distributor extends Entity {
         return contractCost;
     }
 
-    public List<Contract> getContracts() {
-        return Collections.unmodifiableList(contracts);
+    public List<Contract> getConsumerContracts() {
+        return Collections.unmodifiableList(consumerContracts);
+    }
+
+    public void addProducers(Producer producer) {
+        producers.add(producer);
+    }
+
+    public List<Producer> getProducers() {
+        return producers;
+    }
+
+    public boolean isAnyProducerAltered() {
+        return isAnyProducerAltered;
+    }
+
+    public void resetProducers() {
+        producers.clear();
+        isAnyProducerAltered = false;
+    }
+
+    @Override
+    public void update(Observable observable, Object arg) {
+        for (Producer producer : producers) {
+            if (producer.getID() == (int) arg) {
+                isAnyProducerAltered = true;
+                break;
+            }
+        }
     }
 }

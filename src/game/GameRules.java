@@ -1,12 +1,16 @@
 package game;
 
 import entities.Consumer;
-import entities.Contract;
 import entities.Distributor;
 import entities.EntityFactory;
+import entities.Producer;
 import entities.EntityType;
+import entities.Contract;
+import observer.Observable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import strategies.EnergyChoiceStrategy;
+import strategies.EnergyChoiceStrategyFactory;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,54 +18,48 @@ import java.util.Iterator;
 import java.util.List;
 
 
-public final class GameRules {
+public final class GameRules extends Observable {
     private final List<Consumer> consumers;
     private final List<Distributor> distributors;
     private final List<Consumer> bankruptConsumers;
     private final List<Distributor> bankruptDistributors;
+    private final List<Producer> producers;
 
-    /**
-     * Constructor for GameRules
-     *
-     * @param consumers            list of consumers that will be modified
-     * @param distributors         list of distributors that will be modified
-     * @param bankruptConsumers    list of bankrupt consumers that will be modified
-     * @param bankruptDistributors list of bankrupt distributors that will be modified
-     */
     GameRules(final List<Consumer> consumers, final List<Distributor> distributors,
+              final List<Producer> producers,
               final List<Consumer> bankruptConsumers,
               final List<Distributor> bankruptDistributors) {
         this.consumers = consumers;
         this.distributors = distributors;
         this.bankruptConsumers = bankruptConsumers;
         this.bankruptDistributors = bankruptDistributors;
+        this.producers = producers;
     }
 
-    /**
-     * Used to update the game state by changing costs and/or adding Consumers
-     *
-     * @param factory      used to create entities
-     * @param costsChanges used to update costs
-     * @param newConsumers used for factory to create a new Consumer
-     */
-    void processChanges(final EntityFactory factory, final JSONArray costsChanges,
-                               final JSONArray newConsumers) {
+    public void createProducersHistory(int numberOfTurns) {
+        for (Producer producer : producers) {
+            producer.initializeHistorySize(numberOfTurns);
+        }
+    }
+
+    void updateDistributors(final JSONArray distributorChanges) {
         // Changes a distributor's costs
-        if (!costsChanges.isEmpty()) {
-            for (Object costsChange : costsChanges) {
-                JSONObject newCosts = (JSONObject) costsChange;
-                int id = ((Long) newCosts.get("id")).intValue();
-                for (Distributor distributor : distributors) {
-                    if (distributor.getID() == id) {
-                        distributor.updateCosts(
-                                ((Long) newCosts.get("infrastructureCost")).intValue(),
-                                ((Long) newCosts.get("productionCost")).intValue()
-                        );
-                        break;
-                    }
+        for (Object distributorChange : distributorChanges) {
+            JSONObject changes = (JSONObject) distributorChange;
+            int id = ((Long) changes.get("id")).intValue();
+            for (Distributor distributor : distributors) {
+                if (distributor.getID() == id) {
+                    distributor.updateCosts(
+                            ((Long) changes.get("infrastructureCost")).intValue()
+                    );
+                    break;
                 }
             }
         }
+    }
+
+    void updateConsumers(final JSONArray newConsumers) {
+        EntityFactory factory = EntityFactory.getInstance();
 
         // Adds a new Consumer to the Game
         for (Object newConsumer : newConsumers) {
@@ -72,8 +70,56 @@ public final class GameRules {
         }
     }
 
+    void updateProducers(final JSONArray producersChanges) {
+        for (Object producerChanges : producersChanges) {
+            JSONObject producerChangeData = (JSONObject) producerChanges;
+            int id = ((Long) producerChangeData.get("id")).intValue();
+            for (Producer producer : producers) {
+                if (producer.getID() == id) {
+                    producer.setEnergyPerDistributor(((Long) producerChangeData.get(
+                            "energyPerDistributor")).intValue());
+                    notifyObservers(producer.getID());
+                }
+            }
+        }
+    }
+
+    void prepareProducers(int currentTurn) {
+        for (Producer producer : producers) {
+            producer.updateExpectedDistributors(currentTurn);
+        }
+    }
+
+    void assignProducers(int currentTurn) {
+        EnergyChoiceStrategyFactory factory = EnergyChoiceStrategyFactory.getInstance();
+
+        for (Distributor distributor : distributors) {
+            if (distributor.isAnyProducerAltered()) {
+                int energy = 0;
+                EnergyChoiceStrategy strategy = factory.createStrategy(distributor.getStrategy(),
+                        producers);
+                for (Producer producer : distributor.getProducers()) {
+                    producer.removeDistributor(distributor.getID(), currentTurn);
+                }
+                strategy.sortProducersByStrategy();
+                distributor.resetProducers();
+                for (Producer producer : producers) {
+                    if (!producer.isFull(currentTurn)) {
+                        energy += producer.getEnergyPerDistributor();
+                        distributor.addProducers(producer);
+                        producer.addDistributors(distributor.getID(), currentTurn);
+                        if (energy >= distributor.getEnergyNeeded()) {
+                            break;
+                        }
+                    }
+                }
+                distributor.updateProductionCost();
+            }
+        }
+    }
+
     /**
-     * Creates new contracts for the consumer's tho choose from
+     * Creates new contracts for the consumer's to choose from
      */
     void createContracts() {
         for (Distributor distributor : distributors) {
@@ -131,6 +177,12 @@ public final class GameRules {
 
         for (Distributor distributor : distributors) {
             distributor.purgeCanceledContract();
+        }
+    }
+
+    void createObservers() {
+        for (Distributor distributor : distributors) {
+            addObserver(distributor);
         }
     }
 
