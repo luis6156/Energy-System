@@ -56,7 +56,7 @@ public final class Writer {
             distributorData.put(Constants.PRODUCER_STRATEGY, distributor.getStrategy().toString());
             distributorData.put(Constants.IS_BANKRUPT, distributor.isBankrupt());
             JSONArray contractsArray = new JSONArray();
-            for (Contract contract : distributor.getConsumerContracts()) {
+            for (Contract contract : distributor.getContracts()) {
                 JSONObject contractData = new JSONObject();
                 contractData.put(Constants.CONSUMER_ID, contract.getContracteeID());
                 contractData.put(Constants.PRICE, contract.getOriginalPrice());

@@ -27,6 +27,13 @@ public final class EnergyChoiceStrategyFactory {
         return instance;
     }
 
+    /**
+     * Generic Factory Method for strategies
+     *
+     * @param type   type of object to be created
+     * @param producers list of producers used for sorting
+     * @return new strategy type
+     */
     public EnergyChoiceStrategy createStrategy(EnergyChoiceStrategyType type,
                                                List<Producer> producers) {
         if (type == EnergyChoiceStrategyType.GREEN) {

@@ -96,6 +96,7 @@ public final class Game {
                 .flatMap(Collection::stream).sorted(Comparator.comparingInt(Distributor::getID))
                 .collect(Collectors.toList());
 
+        // Sort producers by ID
         producers.sort(Comparator.comparingInt(Producer::getID));
 
         return writer.writeFile(totalConsumers, totalDistributors, producers);

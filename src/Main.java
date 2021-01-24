@@ -16,12 +16,6 @@ public final class Main {
      * @throws Exception might error when reading/writing/opening files, parsing JSON
      */
     public static void main(final String[] args) throws Exception {
-//        String in = "C:\\Users\\micul\\Desktop\\Year " +
-//                "2\\OOP\\Homeworks\\Homework_2\\proiect-etapa2-energy-system\\checker\\resources" +
-//                "\\in\\complex_4.json";
-//        String out = "C:\\Users\\micul\\Desktop\\Year " +
-//                "2\\OOP\\Homeworks\\Homework_2\\proiect-etapa2-energy-system\\checker\\resources" +
-//                "\\out.json";
         Reader reader = new Reader(args[0]);
         Writer writer = new Writer(args[1]);
 

@@ -95,14 +95,26 @@ public final class Contract {
         return penalty != 0;
     }
 
+    /**
+     *
+     * @return contractor ID
+     */
     public int getContractorID() {
         return contractorID;
     }
 
+    /**
+     *
+     * @return contractee ID
+     */
     public int getContracteeID() {
         return contracteeID;
     }
 
+    /**
+     *
+     * @return remaining months of the contract
+     */
     public int getRemainedMonths() {
         return remainedMonths;
     }

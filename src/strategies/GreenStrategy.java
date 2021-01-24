@@ -8,10 +8,18 @@ import java.util.List;
 public class GreenStrategy implements EnergyChoiceStrategy {
     private final List<Producer> producers;
 
+    /**
+     * Green strategy constructor
+     *
+     * @param producers list of producers used for sorting
+     */
     public GreenStrategy(List<Producer> producers) {
         this.producers = producers;
     }
 
+    /**
+     * Sort producers first by renewable sources, by price, by energy given and by id
+     */
     @Override
     public void sortProducersByStrategy() {
         Comparator<Producer> greenSort =
