@@ -165,9 +165,12 @@ Observer: distributors are the observers and the "GameRules" class is used as
         distributors are notified with the producer's ID. If the ID is present
         in the distributor's providers list, it sets the flag 
         "isAnyProducerChanged" to true.
+
 Strategy: used for sorting the producers. There are three strategies, each one
         of them being tied to the producer's attributes.
+
 Factory: used to create entities and strategies.
+
 Singleton: used by all factories.
 
 ## Personal Notes:
