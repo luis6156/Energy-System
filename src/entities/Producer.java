@@ -1,9 +1,6 @@
 package entities;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public final class Producer extends Entity {
     private final List<Set<Integer>> distributorsHistory = new ArrayList<>();
@@ -68,6 +65,6 @@ public final class Producer extends Entity {
     }
 
     public List<Set<Integer>> getDistributors() {
-        return distributorsHistory;
+        return Collections.unmodifiableList(distributorsHistory);
     }
 }

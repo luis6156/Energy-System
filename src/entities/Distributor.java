@@ -20,6 +20,16 @@ public final class Distributor extends SpecialEntity implements Observer {
     private final EnergyChoiceStrategyType strategy;
     private boolean isAnyProducerAltered = true;
 
+    /**
+     * Constructor for distributor
+     *
+     * @param id distributor's ID
+     * @param contractLength distributor's contract length
+     * @param budget distributor's budget
+     * @param infrastructureCost distributor's infrastructure cost
+     * @param energyNeeded distributor's monthly energy need
+     * @param strategy distributor's strategy
+     */
     public Distributor(final int id, final int contractLength, final int budget,
                        final int infrastructureCost, final int energyNeeded,
                        final String strategy) {
@@ -143,7 +153,7 @@ public final class Distributor extends SpecialEntity implements Observer {
     }
 
     public List<Producer> getProducers() {
-        return producers;
+        return Collections.unmodifiableList(producers);
     }
 
     public boolean isAnyProducerAltered() {
