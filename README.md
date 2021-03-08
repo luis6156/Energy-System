@@ -1,4 +1,4 @@
-# Stage 2 - Energy System - Copyright Micu Florian-Luis 321CA 2020
+# Stage 2 - Energy System - Copyright Micu Florian-Luis 321CA 2021
 
 ## About
 
